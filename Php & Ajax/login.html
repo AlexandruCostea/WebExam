@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>User Name</h1>
+    <form id="login-form">
+        <input type="text" id="username" name="username" placeholder="Username" required><br>
+        <button type="submit">Login</button>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $('#login-form').submit(function(event) {
+                event.preventDefault(); // Prevent form submission
+
+                var username = $('#username').val();
+
+                $.ajax({
+                    url: 'login.php',
+                    method: 'POST',
+                    data: {
+                        username: username
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            window.location.href = 'home.html';
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

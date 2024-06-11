@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Projects</h1>
+    <div id="projects-table"></div>
+    <br><br>
+    <h1>My Projects</h1>
+    <div id="my-projects"></div>
+    <br><br>
+    <h1>Add Dev To Projects</h1>
+    <form id="add-form" action="add_dev_to_projects.php" method="post">
+        <input type="text" name="dev_name" placeholder="Developer Name" required><br>
+        <input type="text" name="project_list" placeholder="Project List" required><br>
+        <button type="submit">Add Developer</button>
+    </form>
+    <br><br>
+    <h1>Display Devs By skill</h1>
+    <form id="devs-form" action="display_devs_by_skill.php" method="get">
+        <input type="text" name="skill" placeholder="Skill"><br>
+        <button type="submit">Display Developers</button>
+    </form>
+    <br>
+    <div id="devs-table"></div>
+    <br>
+    <form action="logout.php" method="post">
+        <button type="submit">Logout</button>
+    </form>
+
+
+
+    <script>
+        $(document).ready(function() {
+            $.ajax({
+                url: 'projects.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.projects.length > 0) {
+                        var table = '<table border="1">';
+                        table += '<tr><th>id</th><th>ProjectManagerId</th><th>name</th><th>description</th><th>members</th></tr>';
+                        $.each(response.projects, function(index, project) {
+                            table += '<tr><td>' + project.id + '</td><td>' + project.ProjectManagerID + '</td><td>' + project.name + '</td><td>' + project.description + '</td><td>' + project.members + '</td></tr>';
+                        });
+                        table += '</table>';
+                        $('#projects-table').html(table);
+                    } else {
+                        $('#error-message').text('No projects available.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#error-message').text('Error fetching projects: ' + error);
+                }
+            });
+            $.ajax({
+                url: 'my_projects.php',
+                method: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.projects.length > 0) {
+                        var table = '<table border="1">';
+                        table += '<tr><th>name</th></tr>';
+                        $.each(response.projects, function(index, project) {
+                            table += '<tr><td>' + project.name + '</td></tr>';
+                        });
+                        table += '</table>';
+                        $('#my-projects').html(table);
+                    } else {
+                        $('#error-message').text('No projects available.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#error-message').text('Error fetching projects: ' + error);
+                }
+            });
+
+            $('#add-form').submit(function(event) {
+                event.preventDefault();
+
+                var dev_name = $('#add-form input[name="dev_name"]').val();
+                var project_list = $('#add-form input[name="project_list"]').val();
+
+                $.ajax({
+                    url: 'add_dev_to_projects.php',
+                    method: 'POST',
+                    data: {
+                        dev_name: dev_name,
+                        project_list: project_list
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            alert('Developer added to projects successfully.');
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+
+            $('#devs-form').submit(function(event) {
+                event.preventDefault();
+
+                var skill = $('#devs-form input[name="skill"]').val();
+
+                $.ajax({
+                    url: 'display_devs.php',
+                    method: 'GET',
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.devs.length > 0) {
+                            var table = '<table border="1">';
+                            table += '<tr><th>id</th><th>name</th><th>age</th><th>skills</th></tr>';
+                            $.each(response.devs, function(index, dev) {
+                                var skills = dev.skills.split(',');
+                                if (skills.includes(skill)) {
+                                    table += '<tr><td>' + dev.id + '</td><td>' + dev.name + '</td><td>' + dev.age + '</td><td>' + dev.skills + '</td></tr>';
+                                }
+                            });
+                            table += '</table>';
+                            $('#devs-table').html(table);
+                        } else {
+                            $('#error-message').text('No developers available.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
