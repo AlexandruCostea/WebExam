@@ -190,6 +190,7 @@
                         updates: JSON.stringify(updatesList)
                     },
                     success: function(response) {
+                        updatesList = [];
                         response = JSON.parse(response);
                         if (response.success) {
                             getAllAvatars();
