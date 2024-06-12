@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <form id="login-form">
+        <input type="text" id="username" name="username" placeholder="Username" required><br>
+        <input type="text" id="password" name="password" placeholder="Password" required><br>
+        <button type="submit">Login</button>
+    </form>
+    <br>
+
+    <form id="signup-form">
+        <input type="text" id="username-signup" name="username" placeholder="Username" required><br>
+        <input type="text" id="password-signup" name="password" placeholder="Password" required><br>
+        <button type="submit">Sign Up</button>
+    </form>
+
+    <script>
+        $(document).ready(function() {
+            $('#login-form').submit(function(event) {
+                event.preventDefault(); 
+
+                var username = $('#username').val();
+                var password = $('#password').val();
+
+                $.ajax({
+                    url: 'login.php',
+                    method: 'POST',
+                    data: {
+                        username: username,
+                        password: password
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            window.location.href = 'home.html';
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+
+            $('#signup-form').submit(function(event) {
+                event.preventDefault(); 
+
+                var username = $('#username-signup').val();
+                var password = $('#password-signup').val();
+
+                $.ajax({
+                    url: 'signup.php',
+                    method: 'POST',
+                    data: {
+                        username: username,
+                        password: password
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            alert('User created successfully');
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

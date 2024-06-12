@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <h1>Add Avatar</h1>
+    <form id="add_avatar">
+        <input type="text" id="name" placeholder="Name" required> <br>
+        <input type="number" id="age" placeholder="Age" required> <br>
+        <input type="text" id="powers" placeholder="Powers" required> <br>
+        <input type="number" id="rank" placeholder="Rank" required> <br>
+        <button type="submit">Add</button> <br>
+    </form>
+    <br><br>
+    <h1>Avatars</h1>
+    <form id="filter">
+        <input type="number" id="start_id" placeholder="Start id"> <br>
+        <input type="number" id="stop_id" placeholder="Stop id"> <br>
+        <button type="submit">Filter</button> <br>
+    </form>
+    <br>
+
+    <div id="avatars"></div>
+    <br>
+    <button id="submit">Send to backend</button>
+    <br><br>
+    <form action="logout.php" method="post">
+        <button type="submit">Logout</button>
+    </form>
+
+    <script>
+        let avatarList = [];
+        let updatesList = [];
+
+        function setAvatarList(newAvatarList) {
+            avatarList = newAvatarList;
+            buildAvatarTable(avatarList);
+        }
+
+        function updateAvatar(index) {
+            let newAvatar = {
+                id: avatarList[index].id,
+                name: $(`#name-${index}`).val(),
+                age: $(`#age-${index}`).val(),
+                powers: $(`#powers-${index}`).val(),
+                rank: $(`#rank-${index}`).val()
+            };
+            avatarList[index] = newAvatar;
+            let update = {
+                id: newAvatar.id,
+                name: newAvatar.name,
+                age: newAvatar.age,
+                powers: newAvatar.powers,
+                rank: newAvatar.rank,
+                timeOfUpdate: new Date().toISOString(),
+            }
+            updatesList.push(update);
+            buildAvatarTable(avatarList);
+        }
+
+
+        function buildAvatarTable(avatarList) {
+            let table = '<table border="1">';
+            table += '<tr><th>Id</th><th>Name</th><th>Age</th><th>Powers</th><th>Rank</th><th>Update</th></tr>';
+            for (let i = 0; i < avatarList.length; i++) {
+                table += '<tr>';
+                table += '<td>' + avatarList[i].id + '</td>';
+                table += `<td><input type="text" id="name-${i}" value="${avatarList[i].name}"></td>`;
+                table += `<td><input type="number" id="age-${i}" value="${avatarList[i].age}"></td>`;
+                table += `<td><input type="text" id="powers-${i}" value="${avatarList[i].powers}"></td>`;
+                table += `<td><input type="number" id="rank-${i}" value="${avatarList[i].rank}"></td>`;
+                table += `<td><button onclick="updateAvatar(${i})">Update</button></td>`;
+                table += '</tr>';
+            }
+            table += '</table>';
+            $('#avatars').html(table);
+        }
+
+        function getAllAvatars() {
+            updatesList = [];
+            $.ajax({
+                url: 'get_avatars.php',
+                method: 'GET',
+                success: function(response) {
+                    response = JSON.parse(response);
+                    if (response.success) {
+                        setAvatarList(response.avatars);
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX request failed:", error);
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            $.ajax({
+                url: 'get_session.php',
+                method: 'GET',
+                success: function(response) {
+                    response = JSON.parse(response);
+                    if (!response.success) {
+                        window.location.href = 'login.html';
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX request failed:", error);
+                }
+            });
+
+            getAllAvatars();
+
+            $('#filter').submit(function(event) {
+                event.preventDefault();
+                let startId = $('#start_id').val();
+                let stopId = $('#stop_id').val();
+                if (startId === '' || stopId === '' || startId > stopId) {
+                    alert('Invalid input');
+                    getAllAvatars();
+                    return;
+                }
+                $.ajax({
+                    url: 'get_avatars_filtered.php',
+                    method: 'GET',
+                    data: {
+                        start_id: startId,
+                        stop_id: stopId
+                    },
+                    success: function(response) {
+                        updatesList = [];
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            setAvatarList(response.avatars);
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+
+            $('#add_avatar').submit(function(event) {
+                event.preventDefault();
+                let name = $('#name').val();
+                let age = $('#age').val();
+                let powers = $('#powers').val();
+                let rank = $('#rank').val();
+                $.ajax({
+                    url: 'add_avatar.php',
+                    method: 'POST',
+                    data: {
+                        name: name,
+                        age: age,
+                        powers: powers,
+                        rank: rank,
+                        timeOfCreation: new Date().toISOString()
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            getAllAvatars();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+
+            $('#submit').click(function() {
+                if (updatesList.length === 0) {
+                    alert('No updates to send');
+                    return;
+                }
+                
+                $.ajax({
+                    url: 'update_avatars.php',
+                    method: 'POST',
+                    data: {
+                        updates: JSON.stringify(updatesList)
+                    },
+                    success: function(response) {
+                        response = JSON.parse(response);
+                        if (response.success) {
+                            getAllAvatars();
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("AJAX request failed:", error);
+                    }
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>
