@@ -22,8 +22,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         $sql = "UPDATE avatars SET name='$name', age=$age, powers='$powers', rank=$rank WHERE id=$id";
         if ($conn->query($sql) == TRUE) {
-            $sql = "INSERT INTO logs (log_date, log_text, userId) VALUES (?, ?, ?)";
-            $stmt = $conn->prepare($sql);
+            $sql2 = "INSERT INTO logs (log_date, log_text, userId) VALUES (?, ?, ?)";
+            $stmt = $conn->prepare($sql2);
             $stmt->bind_param("ssi", $timeOfUpdate, $sql, $_SESSION['userId']);
             $stmt->execute();
         } else {
